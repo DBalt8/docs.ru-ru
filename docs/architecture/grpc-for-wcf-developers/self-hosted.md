@@ -1,5 +1,5 @@
 ---
-title: Самохозня gRPC приложений - gRPC для разработчиков WCF
+title: Самостоятельные gRPC приложения - gRPC для разработчиков WCF
 description: Развертывание ASP.NET приложений Core gRPC в качестве самостоятельных сервисов.
 ms.date: 09/02/2019
 ms.openlocfilehash: 69f70e4077247fd07eba7abeee82f257dd1f4f90
@@ -13,11 +13,11 @@ ms.locfileid: "80110910"
 
 Хотя ASP.NET приложения Core 3.0 могут быть размещены в IIS на Windows Server, в настоящее время невозможно разместить приложение gRPC в IIS, потому что некоторые функции HTTP/2 не поддерживаются. Эта функциональность является целью для будущего обновления Windows Server.
 
-Вы можете запустить приложение как службу Windows. Или вы можете запустить его как сервис Linux, управляемый [системным,](https://en.wikipedia.org/wiki/Systemd)из-за новых функций в расширениях хостинга .NET Core 3.0.
+Вы можете запустить приложение как службу Windows. Или вы можете запустить его как сервис Linux, управляемый [systemd](https://en.wikipedia.org/wiki/Systemd)из-за новых функций в расширениях хостинга .NET Core 3.0.
 
 ## <a name="run-your-app-as-a-windows-service"></a>Запустите приложение в качестве службы Windows
 
-Чтобы настроить приложение ASP.NET Core для запуска в качестве службы Windows, установите пакет [Microsoft.Extensions.Hosting.WindowsServices](https://www.nuget.org/packages/Microsoft.Extensions.Hosting.WindowsServices) от NuGet. Затем добавьте `UseWindowsService` вызов `CreateHostBuilder` к `Program.cs`методу в .
+Чтобы настроить приложение ASP.NET Core для запуска в качестве службы Windows, установите пакет [Microsoft.Extensions.Hosting.WindowsServices](https://www.nuget.org/packages/Microsoft.Extensions.Hosting.WindowsServices) от NuGet. Затем добавьте вызов `UseWindowsService` к `CreateHostBuilder` методу в  `Program.cs`.
 
 ```csharp
 public static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -34,24 +34,23 @@ public static IHostBuilder CreateHostBuilder(string[] args) =>
 
 Теперь опубликуйте приложение с помощью одного из этих методов:
 
-* От Visual Studio, нажав на проект вправо и выбрав **Publish** в меню ярлыка.
-* Из .NET Core CLI.
+* В Visual Studio, нажав правой кнопкой мыши и выбрав **Publish** в выпадающем меню .
+* В .NET Core CLI.
 
-При публикации приложения .NET Core можно создать *развертывание, зависящий от инфраструктуры,* или *автономное* развертывание. Развертывание, зависяе от рамок, требует установки общего времени выполнения .NET Core на унитаз, где они запущены. Автономные развертывания публикуются с полной копией времени выполнения и фреймворка .NET Core и могут выполняться на любом узлах. Для получения дополнительной информации, включая преимущества и [.NET Core application deployment](../../core/deploying/index.md) недостатки каждого подхода, см.
+Когда публикуете приложение .NET Core, вы можете выбрать : сделать *развертывание, зависящее от фреймворка,* или сделать *автономное* развертывание. *развертывание, зависящее от фреймворка, требует установки .NET Core Shared Runtime на хост,где запущено развертывание. Автономное развертывание подразумевает публикацию приложения с полной копией .NET Core runtime и .NET Core framework и может быть запущена на любом хосте. Для получения дополнительной информации о преимуществах и недостатках каждого подхода, см.[.NET Core application deployment](../../core/deploying/index.md)
 
-Чтобы опубликовать автономную сборку приложения, которая не требует установки времени выполнения .NET Core 3.0 на узел, укажите время выполнения, которое будет включено в приложение. Используйте `-r` (или) `--runtime`флаг.
+Чтобы опубликовать автономную сборку приложения, которая не требует установки .NET Core 3.0 runtime на хост,укажите среду выполнения, которая будет включена в приложение. Используйте `-r` (или) `--runtime`флаг.
 
 ```dotnetcli
 dotnet publish -c Release -r win-x64 -o ./publish
 ```
 
-Чтобы опубликовать построение, зависящий `-r` от фреймворка, опустите флаг.
+Чтобы опубликовать развертывание, зависящее от фреймворка, опустите флаг `-r`.
 
 ```dotnetcli
 dotnet publish -c Release -o ./publish
 ```
-
-Копируйте полное `publish` содержимое каталога в папку установки. Затем используйте [инструмент sc](/windows/desktop/services/controlling-a-service-using-sc) для создания службы Windows для исполняемого файла.
+Скопируйте всё содержимое `publish` каталого в папку установки . Затем , используйте [sc](/windows/desktop/services/controlling-a-service-using-sc), чтобы создать сервис Windows для исполняемого файла. 
 
 ```console
 sc create MyService binPath=C:\MyService\MyService.exe
@@ -59,7 +58,7 @@ sc create MyService binPath=C:\MyService\MyService.exe
 
 ### <a name="log-to-the-windows-event-log"></a>Войти в журнал событий Windows
 
-Метод `UseWindowsService` автоматически добавляет поставщика [журналов,](/aspnet/core/fundamentals/logging/) который записывает сообщения журнала в журнал событий Windows. Вы можете настроить журнал для этого `EventLog` поставщика, `Logging` добавив `appsettings.json` запись в раздел или другой источник конфигурации.
+Метод `UseWindowsService` автоматически добавляет поставщика [журналов,](/aspnet/core/fundamentals/logging/) который записывает сообщения журнала в журнал событий Windows. Вы можете настроить журнал для этого поставщика, путём добавления поля `EventLog` в секцию `Logging` файла `appsettings.json` или другого файла конфигурации.
 
 Вы можете переопределить имя источника, используемое `SourceName` в журнале событий, установив свойство в этих настройках. Если вы не укажете имя, будет использовано имя приложения по умолчанию (обычно иное имя сборки).
 
